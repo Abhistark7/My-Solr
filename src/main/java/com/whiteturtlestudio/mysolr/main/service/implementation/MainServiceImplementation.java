@@ -4,6 +4,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -13,6 +14,7 @@ import com.whiteturtlestudio.mysolr.main.bos.Energy;
 import com.whiteturtlestudio.mysolr.main.bos.Humidity;
 import com.whiteturtlestudio.mysolr.main.bos.Light;
 import com.whiteturtlestudio.mysolr.main.bos.Temperature;
+import com.whiteturtlestudio.mysolr.main.bos.User;
 import com.whiteturtlestudio.mysolr.main.bos.Voltage;
 import com.whiteturtlestudio.mysolr.main.bos.request.FromToTimestamp;
 import com.whiteturtlestudio.mysolr.main.bos.request.Sensor;
@@ -23,6 +25,7 @@ import com.whiteturtlestudio.mysolr.main.mapper.HumidityHumidityEntityMapper;
 import com.whiteturtlestudio.mysolr.main.mapper.LightLightEntitiyMapper;
 import com.whiteturtlestudio.mysolr.main.mapper.SavingsSavingsEntityMapper;
 import com.whiteturtlestudio.mysolr.main.mapper.TemperatureTemperatureEntityMapper;
+import com.whiteturtlestudio.mysolr.main.mapper.UserUserEntityMapper;
 import com.whiteturtlestudio.mysolr.main.mapper.VoltageVoltageEntityMapper;
 import com.whiteturtlestudio.mysolr.main.models.CurrentEntity;
 import com.whiteturtlestudio.mysolr.main.models.EnergyEntity;
@@ -102,6 +105,9 @@ public class MainServiceImplementation implements MainService {
 
   @Autowired
   private EnergyEnergyEntitiyMapper energyEnergyEntitiyMapper;
+
+  @Autowired
+  private UserUserEntityMapper userUserEntityMapper;
 
   @Override
   public List<Current> getAllCurrent(FromToTimestamp fromToTimestamp) {
@@ -187,14 +193,8 @@ public class MainServiceImplementation implements MainService {
 
   @Override
   public DateSaving getTodaySavings() {
-    Long currentTimestamp = System.currentTimeMillis();
-    Long todayStartTimestamp = getDateStartTimestamp(getTodayDateString());
-    List<EnergyEntity> filteredEnergy = energyRepository.findAll().stream().filter(
-            savingsEntity -> Long.parseLong(savingsEntity.getTimestamp()) > todayStartTimestamp
-                    && Long.parseLong(savingsEntity.getTimestamp()) < currentTimestamp)
-            .collect(Collectors.toList());
     return DateSaving.builder().date(getTodayDateString())
-            .savings(calculateSavings(energyEnergyEntitiyMapper.energyEntityListToEnergyList(filteredEnergy)))
+            .savings(calculateSavings(getTodayEnergyGeneration().getSavings()))
             .build();
   }
 
@@ -207,7 +207,8 @@ public class MainServiceImplementation implements MainService {
                     && Long.parseLong(savingsEntity.getTimestamp()) < yesterdayStartTimestamp)
             .collect(Collectors.toList());
     return DateSaving.builder().date(getYesterdayDateString())
-            .savings(calculateSavings(energyEnergyEntitiyMapper.energyEntityListToEnergyList(filteredEnergy)))
+            .savings(calculateSavings(calculateTotalEnergy(energyEnergyEntitiyMapper
+                    .energyEntityListToEnergyList(filteredEnergy))))
             .build();
   }
 
@@ -220,8 +221,20 @@ public class MainServiceImplementation implements MainService {
                     && Long.parseLong(savingsEntity.getTimestamp()) < currentTimestamp)
             .collect(Collectors.toList());
     return DateSaving.builder().date(getTodayDateString())
-            .savings(calculateEnergy(energyEnergyEntitiyMapper.energyEntityListToEnergyList(filteredEnergy)))
+            .savings(calculateTotalEnergy(energyEnergyEntitiyMapper.energyEntityListToEnergyList(filteredEnergy)))
             .build();
+  }
+
+  @Override
+  public boolean saveUser(User user) {
+    userRepository.save(userUserEntityMapper.userToUserEntity(user));
+    return true;
+  }
+
+  @Override
+  public User getUser() {
+    //todo extract user id from token and use it for retrieving user
+    return userUserEntityMapper.userEntityToUser(userRepository.findUserByUserId(123));
   }
 
   private long getDateStartTimestamp(String date) {
@@ -249,30 +262,25 @@ public class MainServiceImplementation implements MainService {
     return Double.valueOf(current) * Double.valueOf(voltage);
   }
 
-  private String calculateSavings(List<Energy> energyList) {
-    long totalSavings = ZERO;
-    for (int i = ZERO; i < energyList.size() - ONE; i++) {
-      Long value2 = Long.parseLong(energyList.get(i + ONE).getValue());
-      Long timeDiff =
-              Long.parseLong(energyList.get(i).getTimstamp()) - Long.parseLong(energyList.get(i + ONE).getTimstamp());
-      long energyForTimeDiff = (value2 * timeDiff) / TOTAL_SECONDS_IN_A_DAY;
-      totalSavings += energyForTimeDiff;
-    }
+  private String calculateSavings(String totalEnergy) {
+    double energy = Double.parseDouble(totalEnergy);
+    double totalSavings = ZERO;
     //todo extract user id from token and use it for retrieving user
     if (userRepository.findUserByUserId(123) != null) {
       totalSavings =
-              totalSavings * Long.parseLong(userRepository.findUserByUserId(123).getTariff());
+              energy * Double.parseDouble(userRepository.findUserByUserId(123).getTariff());
     }
     return String.valueOf(totalSavings);
   }
 
-  private String calculateEnergy(List<Energy> energyList) {
-    long totalEnergy = ZERO;
+  private String calculateTotalEnergy(List<Energy> energyList) {
+    energyList.sort(Comparator.comparing(Energy::getTimestamp));
+    double totalEnergy = ZERO;
     for (int i = ZERO; i < energyList.size() - ONE; i++) {
-      Long value2 = Long.parseLong(energyList.get(i + ONE).getValue());
-      Long timeDiff =
-              Long.parseLong(energyList.get(i).getTimstamp()) - Long.parseLong(energyList.get(i + ONE).getTimstamp());
-      long energyForTimeDiff = (value2 * timeDiff) / TOTAL_SECONDS_IN_A_DAY;
+      double value2 = Double.parseDouble(energyList.get(i + ONE).getValue());
+      double timeDiff =
+              Double.parseDouble(energyList.get(i + ONE).getTimestamp()) - Double.parseDouble(energyList.get(i).getTimestamp());
+      double energyForTimeDiff = (value2 * timeDiff) / TOTAL_SECONDS_IN_A_DAY;
       totalEnergy += energyForTimeDiff;
     }
     return String.valueOf(totalEnergy);
@@ -281,29 +289,29 @@ public class MainServiceImplementation implements MainService {
   private String getTodayDateString() {
     Date todayDate = new Date();
     SimpleDateFormat simpleDateFormat = new SimpleDateFormat(DATE_FORMAT);
-    simpleDateFormat.format(todayDate);
-    return todayDate.toString() + TIME_FORMAT;
+    String todayDateString = simpleDateFormat.format(todayDate);
+    return todayDateString + TIME_FORMAT;
   }
 
   private String getYesterdayDateString() {
-    DateFormat dateFormat = new SimpleDateFormat(TIMESTAMP_SLASH_FORMAT);
-    return dateFormat.format(yesterday());
+    DateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
+    return dateFormat.format(yesterday()) + TIME_FORMAT;
   }
 
   private String getTomorrowDateString() {
     DateFormat dateFormat = new SimpleDateFormat(TIMESTAMP_SLASH_FORMAT);
-    return dateFormat.format(tomorrow());
+    return dateFormat.format(tomorrow()) + TIME_FORMAT;
   }
 
   private Date yesterday() {
     final Calendar cal = Calendar.getInstance();
-    cal.add(Calendar.DATE, -1);
+    cal.add(Calendar.DATE, -ONE);
     return cal.getTime();
   }
 
   private Date tomorrow() {
     final Calendar cal = Calendar.getInstance();
-    cal.add(Calendar.DATE, +1);
+    cal.add(Calendar.DATE, +ONE);
     return cal.getTime();
 
   }

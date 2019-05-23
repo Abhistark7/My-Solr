@@ -17,5 +17,5 @@ public class Energy {
   Integer id;
   Integer userId;
   String value;
-  String timstamp;
+  String timestamp;
 }

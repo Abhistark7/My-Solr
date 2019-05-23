@@ -6,6 +6,7 @@ import com.whiteturtlestudio.mysolr.main.bos.Current;
 import com.whiteturtlestudio.mysolr.main.bos.Humidity;
 import com.whiteturtlestudio.mysolr.main.bos.Light;
 import com.whiteturtlestudio.mysolr.main.bos.Temperature;
+import com.whiteturtlestudio.mysolr.main.bos.User;
 import com.whiteturtlestudio.mysolr.main.bos.Voltage;
 import com.whiteturtlestudio.mysolr.main.bos.request.FromToTimestamp;
 import com.whiteturtlestudio.mysolr.main.bos.request.Sensor;
@@ -30,5 +31,9 @@ public interface MainService {
   DateSaving getYesterdaySavings();
 
   DateSaving getTodayEnergyGeneration();
+
+  boolean saveUser(User user);
+
+  User getUser();
 
 }

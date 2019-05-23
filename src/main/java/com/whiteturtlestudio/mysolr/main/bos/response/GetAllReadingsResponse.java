@@ -9,7 +9,6 @@ import com.whiteturtlestudio.mysolr.main.bos.Temperature;
 import com.whiteturtlestudio.mysolr.main.bos.Voltage;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -19,7 +18,6 @@ import lombok.ToString;
 @NoArgsConstructor
 @Getter
 @Setter
-@Builder
 @ToString
 public class GetAllReadingsResponse extends BaseResponse {
   List<Current> currentList;

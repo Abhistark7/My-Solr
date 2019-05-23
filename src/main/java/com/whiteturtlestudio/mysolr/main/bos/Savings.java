@@ -17,5 +17,5 @@ public class Savings {
   Integer id;
   Integer userId;
   String value;
-  String date;
+  String timestamp;
 }

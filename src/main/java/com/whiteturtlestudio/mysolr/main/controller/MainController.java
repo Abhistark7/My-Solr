@@ -1,5 +1,6 @@
 package com.whiteturtlestudio.mysolr.main.controller;
 
+import com.whiteturtlestudio.mysolr.main.bos.User;
 import com.whiteturtlestudio.mysolr.main.bos.request.FromToTimestamp;
 import com.whiteturtlestudio.mysolr.main.bos.request.Sensor;
 import com.whiteturtlestudio.mysolr.main.bos.response.BaseResponse;
@@ -62,4 +63,17 @@ public class MainController {
     return new ResponseEntity<>(mainService.getTodayEnergyGeneration(), HttpStatus.OK);
   }
 
+  @RequestMapping(value = "/saveUser", method = RequestMethod.POST)
+  private ResponseEntity<BaseResponse> saveUser(@RequestBody User user) {
+    mainService.saveUser(user);
+    return new ResponseEntity<>(BaseResponse.builder()
+            .status(true)
+            .message(Constants.SUCCESS)
+            .build(), HttpStatus.OK);
+  }
+
+  @RequestMapping(value = "/getUser", method = RequestMethod.GET)
+  private ResponseEntity<User> getUser() {
+    return new ResponseEntity<>(mainService.getUser(), HttpStatus.OK);
+  }
 }

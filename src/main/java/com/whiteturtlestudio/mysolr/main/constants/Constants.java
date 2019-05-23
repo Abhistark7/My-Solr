@@ -7,4 +7,6 @@ public class Constants {
   public static String SUCCESS = "Success";
   public static String FAILURE = "Failure";
   public static int HTTP_SUCCESS_CODE = 200;
+  private static String FAHRENHEIT_UNIT = "F";
+  private static String CELSIUS_UNIT = "C";
 }

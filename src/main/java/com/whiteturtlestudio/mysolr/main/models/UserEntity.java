@@ -53,7 +53,7 @@ public class UserEntity {
   String panelName;
 
   @Column(name = "panel_capacity")
-  String panelCapacity;
+  String panelCapacityUnit;
 
   @Column(name = "panel_capacity_unit")
   String panelUnit;
@@ -62,7 +62,7 @@ public class UserEntity {
   String panelAge;
 
   @Column(name = "registered_date")
-  String registerdDate;
+  String registeredDate;
 
   @Column(name = "tariff")
   String tariff;
