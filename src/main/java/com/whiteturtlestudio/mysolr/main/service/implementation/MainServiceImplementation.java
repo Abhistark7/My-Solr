@@ -31,6 +31,7 @@ import com.whiteturtlestudio.mysolr.main.models.CurrentEntity;
 import com.whiteturtlestudio.mysolr.main.models.EnergyEntity;
 import com.whiteturtlestudio.mysolr.main.models.HumidityEntity;
 import com.whiteturtlestudio.mysolr.main.models.LightEntity;
+import com.whiteturtlestudio.mysolr.main.models.SavingsEntity;
 import com.whiteturtlestudio.mysolr.main.models.TemperatureEntity;
 import com.whiteturtlestudio.mysolr.main.models.VoltageEntity;
 import com.whiteturtlestudio.mysolr.main.repository.CurrentRepository;
@@ -203,8 +204,8 @@ public class MainServiceImplementation implements MainService {
     Long yesterdayStartTimestamp = getDateStartTimestamp(getYesterdayDateString());
     Long todayStartTimestamp = getDateStartTimestamp(getTodayDateString());
     List<EnergyEntity> filteredEnergy = energyRepository.findAll().stream().filter(
-            savingsEntity -> Long.parseLong(savingsEntity.getTimestamp()) > todayStartTimestamp
-                    && Long.parseLong(savingsEntity.getTimestamp()) < yesterdayStartTimestamp)
+            savingsEntity -> Long.parseLong(savingsEntity.getTimestamp()) < todayStartTimestamp
+                    && Long.parseLong(savingsEntity.getTimestamp()) > yesterdayStartTimestamp)
             .collect(Collectors.toList());
     return DateSaving.builder().date(getYesterdayDateString())
             .savings(calculateSavings(calculateTotalEnergy(energyEnergyEntitiyMapper
@@ -223,6 +224,25 @@ public class MainServiceImplementation implements MainService {
     return DateSaving.builder().date(getTodayDateString())
             .savings(calculateTotalEnergy(energyEnergyEntitiyMapper.energyEntityListToEnergyList(filteredEnergy)))
             .build();
+  }
+
+  @Override
+  public DateSaving getTotalSavings() {
+    String registeredDate = userRepository.findUserByUserId(123).getRegisteredDate();
+    double totalDays = TimeUtils.getNoOfDaysBetweenDates(registeredDate, getTodayDateString());
+    return DateSaving.builder()
+            .date(String.valueOf(totalDays))
+            .savings(calculateTotalSavings())
+            .build();
+  }
+
+  private String calculateTotalSavings() {
+    List<SavingsEntity> savingsEntityList = savingsRepository.findSavingsByUserId(123);
+    double totalSavings = 0;
+    for(SavingsEntity savingsEntity : savingsEntityList) {
+      totalSavings += Double.parseDouble(savingsEntity.getValue());
+    }
+    return String.valueOf(totalSavings);
   }
 
   @Override

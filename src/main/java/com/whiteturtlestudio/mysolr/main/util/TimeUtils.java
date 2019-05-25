@@ -4,6 +4,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 public class TimeUtils {
   private static final String TIMESTAMP_FORMAT = "dd-MM-yyyy HH:mm:ss";
@@ -23,5 +24,18 @@ public class TimeUtils {
       e.printStackTrace();
     }
     return date.getTime() / THOUSAND;
+  }
+
+  public static long getNoOfDaysBetweenDates(String startDate, String endDate) {
+    SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+    try {
+      Date date1 = dateFormat.parse(startDate);
+      Date date2 = dateFormat.parse(endDate);
+      long diff = date2.getTime() - date1.getTime();
+      return TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS);
+    } catch (ParseException e) {
+      e.printStackTrace();
+    }
+    return 0;
   }
 }

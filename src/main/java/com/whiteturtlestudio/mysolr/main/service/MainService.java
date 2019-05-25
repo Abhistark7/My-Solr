@@ -32,6 +32,8 @@ public interface MainService {
 
   DateSaving getTodayEnergyGeneration();
 
+  DateSaving getTotalSavings();
+
   boolean saveUser(User user);
 
   User getUser();

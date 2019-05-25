@@ -53,10 +53,10 @@ public class UserEntity {
   String panelName;
 
   @Column(name = "panel_capacity")
-  String panelCapacityUnit;
+  String panelCapacity;
 
   @Column(name = "panel_capacity_unit")
-  String panelUnit;
+  String panelCapacityUnit;
 
   @Column(name = "panel_age")
   String panelAge;

@@ -63,6 +63,11 @@ public class MainController {
     return new ResponseEntity<>(mainService.getTodayEnergyGeneration(), HttpStatus.OK);
   }
 
+  @RequestMapping(value = "getTotalSavings", method = RequestMethod.GET)
+  private ResponseEntity<DateSaving> getTotalSavings() {
+    return new ResponseEntity<>(mainService.getTotalSavings(), HttpStatus.OK);
+  }
+
   @RequestMapping(value = "/saveUser", method = RequestMethod.POST)
   private ResponseEntity<BaseResponse> saveUser(@RequestBody User user) {
     mainService.saveUser(user);
