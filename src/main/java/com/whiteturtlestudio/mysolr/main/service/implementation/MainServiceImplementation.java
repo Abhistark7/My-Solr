@@ -14,6 +14,7 @@ import com.whiteturtlestudio.mysolr.main.bos.Voltage;
 import com.whiteturtlestudio.mysolr.main.bos.request.FromToTimestamp;
 import com.whiteturtlestudio.mysolr.main.bos.request.Sensor;
 import com.whiteturtlestudio.mysolr.main.bos.response.DateSaving;
+import com.whiteturtlestudio.mysolr.main.constants.Constants;
 import com.whiteturtlestudio.mysolr.main.mapper.CurrentCurrentEntityMapper;
 import com.whiteturtlestudio.mysolr.main.mapper.EnergyEnergyEntitiyMapper;
 import com.whiteturtlestudio.mysolr.main.mapper.HumidityHumidityEntityMapper;
@@ -47,9 +48,6 @@ import org.springframework.stereotype.Service;
 @Transactional
 @Service
 public class MainServiceImplementation implements MainService {
-  private static final int TOTAL_SECONDS_IN_A_DAY = 3600;
-  private static final int ZERO = 0;
-  private static final int ONE = 1;
 
   @Autowired
   private CurrentRepository currentRepository;
@@ -261,7 +259,7 @@ public class MainServiceImplementation implements MainService {
 
   private String calculateSavings(String totalEnergy) {
     double energy = Double.parseDouble(totalEnergy);
-    double totalSavings = ZERO;
+    double totalSavings = Constants.ZERO;
     //todo extract user id from token and use it for retrieving user
     if (userRepository.findUserByUserId(123) != null) {
       totalSavings =
@@ -272,12 +270,12 @@ public class MainServiceImplementation implements MainService {
 
   private String calculateTotalEnergy(List<Energy> energyList) {
     energyList.sort(Comparator.comparing(Energy::getTimestamp));
-    double totalEnergy = ZERO;
-    for (int i = ZERO; i < energyList.size() - ONE; i++) {
-      double value2 = Double.parseDouble(energyList.get(i + ONE).getValue());
+    double totalEnergy = Constants.ZERO;
+    for (int i = Constants.ZERO; i < energyList.size() - Constants.ONE; i++) {
+      double value2 = Double.parseDouble(energyList.get(i + Constants.ONE).getValue());
       double timeDiff =
-              Double.parseDouble(energyList.get(i + ONE).getTimestamp()) - Double.parseDouble(energyList.get(i).getTimestamp());
-      double energyForTimeDiff = (value2 * timeDiff) / TOTAL_SECONDS_IN_A_DAY;
+              Double.parseDouble(energyList.get(i + Constants.ONE).getTimestamp()) - Double.parseDouble(energyList.get(i).getTimestamp());
+      double energyForTimeDiff = (value2 * timeDiff) / Constants.TOTAL_SECONDS_IN_A_DAY;
       totalEnergy += energyForTimeDiff;
     }
     return String.valueOf(totalEnergy);
