@@ -1,11 +1,6 @@
 package com.whiteturtlestudio.mysolr.main.service.implementation;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -52,13 +47,7 @@ import org.springframework.stereotype.Service;
 @Transactional
 @Service
 public class MainServiceImplementation implements MainService {
-
-  private static final String TIMESTAMP_FORMAT = "dd-MM-yyyy HH:mm:ss";
-  private static final String TIMESTAMP_SLASH_FORMAT = "yyyy/MM/dd HH:mm:ss";
-  private static final String DATE_FORMAT = "dd-MM-yyyy";
-  private static final int THOUSAND = 1000;
   private static final int TOTAL_SECONDS_IN_A_DAY = 3600;
-  private static final String TIME_FORMAT = " 00:00:00";
   private static final int ZERO = 0;
   private static final int ONE = 1;
 
@@ -194,20 +183,20 @@ public class MainServiceImplementation implements MainService {
 
   @Override
   public DateSaving getTodaySavings() {
-    return DateSaving.builder().date(getTodayDateString())
+    return DateSaving.builder().date(TimeUtils.getTodayDateString())
             .savings(calculateSavings(getTodayEnergyGeneration().getSavings()))
             .build();
   }
 
   @Override
   public DateSaving getYesterdaySavings() {
-    Long yesterdayStartTimestamp = getDateStartTimestamp(getYesterdayDateString());
-    Long todayStartTimestamp = getDateStartTimestamp(getTodayDateString());
+    Long yesterdayStartTimestamp = TimeUtils.getDateStartTimestamp(TimeUtils.getYesterdayDateString());
+    Long todayStartTimestamp = TimeUtils.getDateStartTimestamp(TimeUtils.getTodayDateString());
     List<EnergyEntity> filteredEnergy = energyRepository.findAll().stream().filter(
             savingsEntity -> Long.parseLong(savingsEntity.getTimestamp()) < todayStartTimestamp
                     && Long.parseLong(savingsEntity.getTimestamp()) > yesterdayStartTimestamp)
             .collect(Collectors.toList());
-    return DateSaving.builder().date(getYesterdayDateString())
+    return DateSaving.builder().date(TimeUtils.getYesterdayDateString())
             .savings(calculateSavings(calculateTotalEnergy(energyEnergyEntitiyMapper
                     .energyEntityListToEnergyList(filteredEnergy))))
             .build();
@@ -216,12 +205,12 @@ public class MainServiceImplementation implements MainService {
   @Override
   public DateSaving getTodayEnergyGeneration() {
     Long currentTimestamp = System.currentTimeMillis();
-    Long todayStartTimestamp = getDateStartTimestamp(getTodayDateString());
+    Long todayStartTimestamp = TimeUtils.getDateStartTimestamp(TimeUtils.getTodayDateString());
     List<EnergyEntity> filteredEnergy = energyRepository.findAll().stream().filter(
             savingsEntity -> Long.parseLong(savingsEntity.getTimestamp()) > todayStartTimestamp
                     && Long.parseLong(savingsEntity.getTimestamp()) < currentTimestamp)
             .collect(Collectors.toList());
-    return DateSaving.builder().date(getTodayDateString())
+    return DateSaving.builder().date(TimeUtils.getTodayDateString())
             .savings(calculateTotalEnergy(energyEnergyEntitiyMapper.energyEntityListToEnergyList(filteredEnergy)))
             .build();
   }
@@ -229,7 +218,7 @@ public class MainServiceImplementation implements MainService {
   @Override
   public DateSaving getTotalSavings() {
     String registeredDate = userRepository.findUserByUserId(123).getRegisteredDate();
-    double totalDays = TimeUtils.getNoOfDaysBetweenDates(registeredDate, getTodayDateString());
+    double totalDays = TimeUtils.getNoOfDaysBetweenDates(registeredDate, TimeUtils.getTodayDateString());
     return DateSaving.builder()
             .date(String.valueOf(totalDays))
             .savings(calculateTotalSavings())
@@ -255,18 +244,6 @@ public class MainServiceImplementation implements MainService {
   public User getUser() {
     //todo extract user id from token and use it for retrieving user
     return userUserEntityMapper.userEntityToUser(userRepository.findUserByUserId(123));
-  }
-
-  private long getDateStartTimestamp(String date) {
-    long todayStartTimestamp = 0;
-    SimpleDateFormat simpleTimestampFormat = new SimpleDateFormat(TIMESTAMP_FORMAT);
-    try {
-      Date todayDateTimestamp = simpleTimestampFormat.parse(date);
-      todayStartTimestamp = todayDateTimestamp.getTime() / THOUSAND;
-    } catch (ParseException e) {
-      e.printStackTrace();
-    }
-    return todayStartTimestamp;
   }
 
   private void saveEnergy(Current current, Voltage voltage) {
@@ -306,34 +283,6 @@ public class MainServiceImplementation implements MainService {
     return String.valueOf(totalEnergy);
   }
 
-  private String getTodayDateString() {
-    Date todayDate = new Date();
-    SimpleDateFormat simpleDateFormat = new SimpleDateFormat(DATE_FORMAT);
-    String todayDateString = simpleDateFormat.format(todayDate);
-    return todayDateString + TIME_FORMAT;
-  }
 
-  private String getYesterdayDateString() {
-    DateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
-    return dateFormat.format(yesterday()) + TIME_FORMAT;
-  }
-
-  private String getTomorrowDateString() {
-    DateFormat dateFormat = new SimpleDateFormat(TIMESTAMP_SLASH_FORMAT);
-    return dateFormat.format(tomorrow()) + TIME_FORMAT;
-  }
-
-  private Date yesterday() {
-    final Calendar cal = Calendar.getInstance();
-    cal.add(Calendar.DATE, -ONE);
-    return cal.getTime();
-  }
-
-  private Date tomorrow() {
-    final Calendar cal = Calendar.getInstance();
-    cal.add(Calendar.DATE, +ONE);
-    return cal.getTime();
-
-  }
 
 }
