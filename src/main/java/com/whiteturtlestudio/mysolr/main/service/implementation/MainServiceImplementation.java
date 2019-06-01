@@ -2,6 +2,7 @@ package com.whiteturtlestudio.mysolr.main.service.implementation;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import com.whiteturtlestudio.mysolr.main.bos.Current;
@@ -29,6 +30,7 @@ import com.whiteturtlestudio.mysolr.main.models.HumidityEntity;
 import com.whiteturtlestudio.mysolr.main.models.LightEntity;
 import com.whiteturtlestudio.mysolr.main.models.SavingsEntity;
 import com.whiteturtlestudio.mysolr.main.models.TemperatureEntity;
+import com.whiteturtlestudio.mysolr.main.models.UserEntity;
 import com.whiteturtlestudio.mysolr.main.models.VoltageEntity;
 import com.whiteturtlestudio.mysolr.main.repository.CurrentRepository;
 import com.whiteturtlestudio.mysolr.main.repository.EnergyRepository;
@@ -215,7 +217,7 @@ public class MainServiceImplementation implements MainService {
 
   @Override
   public DateSaving getTotalSavings() {
-    String registeredDate = userRepository.findUserByUserId(123).getRegisteredDate();
+    String registeredDate = userRepository.findUserByUserId("123").getRegisteredDate();
     double totalDays = TimeUtils.getNoOfDaysBetweenDates(registeredDate, TimeUtils.getTodayDateString());
     return DateSaving.builder()
             .date(String.valueOf(totalDays))
@@ -234,14 +236,16 @@ public class MainServiceImplementation implements MainService {
 
   @Override
   public boolean saveUser(User user) {
-    userRepository.save(userUserEntityMapper.userToUserEntity(user));
+    UserEntity userEntity = userUserEntityMapper.userToUserEntity(user);
+    userEntity.setUserId(generateUid());
+    userRepository.save(userEntity);
     return true;
   }
 
   @Override
   public User getUser() {
     //todo extract user id from token and use it for retrieving user
-    return userUserEntityMapper.userEntityToUser(userRepository.findUserByUserId(123));
+    return userUserEntityMapper.userEntityToUser(userRepository.findUserByUserId("123"));
   }
 
   private void saveEnergy(Current current, Voltage voltage) {
@@ -261,9 +265,9 @@ public class MainServiceImplementation implements MainService {
     double energy = Double.parseDouble(totalEnergy);
     double totalSavings = Constants.ZERO;
     //todo extract user id from token and use it for retrieving user
-    if (userRepository.findUserByUserId(123) != null) {
+    if (userRepository.findUserByUserId("123") != null) {
       totalSavings =
-              energy * Double.parseDouble(userRepository.findUserByUserId(123).getTariff());
+              energy * Double.parseDouble(userRepository.findUserByUserId("123").getTariff());
     }
     return String.valueOf(totalSavings);
   }
@@ -281,6 +285,16 @@ public class MainServiceImplementation implements MainService {
     return String.valueOf(totalEnergy);
   }
 
+  private String generateUid() {
+    String uniqueID = UUID.randomUUID().toString();
+    if (checkIfUidExistsInDb(uniqueID)) {
+      generateUid();
+    }
+    return uniqueID;
+  }
 
+  private boolean checkIfUidExistsInDb(String uid) {
+    return userRepository.findUserByUserId(uid) != null;
+  }
 
 }

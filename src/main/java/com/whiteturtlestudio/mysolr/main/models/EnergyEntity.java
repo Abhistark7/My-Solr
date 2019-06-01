@@ -23,7 +23,7 @@ import lombok.ToString;
 @Table(name = "energy")
 public class EnergyEntity {
   @Id
-  @GeneratedValue(strategy = GenerationType.AUTO)
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "id")
   Integer id;
 

@@ -24,7 +24,7 @@ import lombok.ToString;
 public class LightEntity {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.AUTO)
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "id")
   Integer id;
 

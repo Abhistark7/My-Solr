@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * @author abhisheksahu created at 2019-05-22
  */
 public interface UserRepository extends JpaRepository<UserEntity, Integer> {
-  UserEntity findUserByUserId(Integer userId);
+  UserEntity findUserByUserId(String userId);
 
   UserEntity save(UserEntity userEntity);
 

@@ -24,12 +24,12 @@ import lombok.ToString;
 public class UserEntity {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.AUTO)
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "id")
   Integer id;
 
   @Column(name = "user_id")
-  Integer userId;
+  String userId;
 
   @Column(name = "token_id")
   String tokenId;
